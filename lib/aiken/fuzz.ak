@@ -24,8 +24,8 @@ pub fn bool() -> Fuzzer<Bool> {
 
 /// Generate a random [`ByteArray`](https://aiken-lang.github.io/prelude/aiken.html#ByteArray) of 32 bytes.
 pub fn bytearray() -> Fuzzer<ByteArray> {
-  let lsb <- and_then(rand)
-  let msb <- map(rand)
+  let lsb = and_then(rand)
+  let msb = map(rand)
   ""
     |> builtin.cons_bytearray(lsb, _)
     |> builtin.cons_bytearray(msb, _)
@@ -41,12 +41,12 @@ pub fn bytearray_between(min: Int, max: Int) -> Fuzzer<ByteArray> {
     constant("")
   } else {
     expect min >= 0
-    let size <- and_then(int_between(min, max))
+    let size = and_then(int_between(min, max))
     if size <= 32 {
       map(bytearray(), builtin.slice_bytearray(0, size, _))
     } else {
-      let head <- and_then(bytearray())
-      let tail <- map(bytearray_between(0, size - 32))
+      let head = and_then(bytearray())
+      let tail = map(bytearray_between(0, size - 32))
       builtin.append_bytearray(head, tail)
     }
   }
@@ -170,12 +170,12 @@ pub fn int_between(min: Int, max: Int) -> Fuzzer<Int> {
     let range = max - min + 1
     let log2_floor = log2(range)
     let threshold = math.pow2(log2_floor)
-    let n <- and_then(rand)
+    let n = and_then(rand)
     if n * range <= max_rand * threshold {
-      let offset <- map(rand_n(log2_floor, _))
+      let offset = map(rand_n(log2_floor, _))
       offset + min
     } else {
-      let offset <- map(int_between(0, range - threshold - 1))
+      let offset = map(int_between(0, range - threshold - 1))
       threshold + offset + min
     }
   }
@@ -206,19 +206,19 @@ pub fn list_at_most(fuzzer: Fuzzer<a>, max: Int) -> Fuzzer<List<a>> {
 
 /// Generate a random list and pick an element from that list. Return both.
 pub fn list_with_elem(fuzzer: Fuzzer<a>) -> Fuzzer<(List<a>, a)> {
-  let xs <- and_then(list_at_least(fuzzer, 1))
-  let x <- map(one_of(xs))
+  let xs = and_then(list_at_least(fuzzer, 1))
+  let x = map(one_of(xs))
   (xs, x)
 }
 
 /// Take a random sublist from an existing list.
 pub fn sublist(xs: List<a>) -> Fuzzer<List<a>> {
-  let threshold <- and_then(rand)
+  let threshold = and_then(rand)
   when xs is {
     [] -> constant([])
     [head, ..tail] -> {
-      let n <- and_then(rand)
-      let rest <- map(sublist(tail))
+      let n = and_then(rand)
+      let rest = map(sublist(tail))
       if n < threshold {
         [head, ..rest]
       } else {
@@ -280,7 +280,7 @@ pub fn list_between(fuzzer: Fuzzer<a>, min: Int, max: Int) -> Fuzzer<List<a>> {
 //   choice sequence, we still generate lists that respect the given invariant.
 fn do_list_between(p, q, fuzzer, min, max, length, xs) -> Fuzzer<List<a>> {
   if length < min {
-    let x <- and_then(with_choice(min_rand) |> and_then(always(fuzzer, _)))
+    let x = and_then(with_choice(min_rand) |> and_then(always(fuzzer, _)))
     do_list_between(p, q, fuzzer, min, max, length + 1, [x, ..xs])
   } else if length == max {
     with_choice(max_rand) |> map(fn(_) { xs })
@@ -334,7 +334,7 @@ pub fn one_of(xs: List<a>) -> Fuzzer<a> {
 
 /// Choose either of two fuzzers with an equal probability.
 pub fn either(left: Fuzzer<a>, right: Fuzzer<a>) -> Fuzzer<a> {
-  let pick_left <- and_then(bool())
+  let pick_left = and_then(bool())
   if pick_left {
     left
   } else {
@@ -379,7 +379,7 @@ fn do_such_that(
   if max_tries <= 0 {
     fail @"such_that: couldn't satisfy the predicate after 100 attempts."
   } else {
-    let x <- and_then(fuzzer)
+    let x = and_then(fuzzer)
     if predicate(x) {
       constant(x)
     } else {
@@ -393,7 +393,7 @@ fn do_such_that(
 ///
 /// ```aiken
 /// pub fn either(left: Fuzzer<a>, right: Fuzzer<a>) -> Fuzzer<a> {
-///   let pick_left <- fuzz.and_then(fuzz.bool())
+///   let pick_left = fuzz.and_then(fuzz.bool())
 ///   if pick_left {
 ///     left
 ///   } else {
@@ -415,7 +415,7 @@ pub fn and_then(fuzz_a: Fuzzer<a>, f: fn(a) -> Fuzzer<b>) -> Fuzzer<b> {
 ///
 /// ```aiken
 /// fn bool() -> Fuzzer<Bool> {
-///   let n <- map(int_between(1, 100))
+///   let n = map(int_between(1, 100))
 ///   n % 2
 /// }
 /// ```
@@ -827,7 +827,7 @@ fn rand(prng: PRNG) -> Option<(PRNG, Int)> {
 }
 
 fn rand_n(bits: Int, prng: PRNG) -> Option<(PRNG, Int)> {
-  let (prng, buffer) <- option.map(do_rand_n("", bits, prng))
+  let (prng, buffer) = option.map(do_rand_n("", bits, prng))
   (prng, builtin.bytearray_to_integer(True, buffer))
 }
 
@@ -836,7 +836,7 @@ fn do_rand_n(
   bits: Int,
   prng: PRNG,
 ) -> Option<(PRNG, ByteArray)> {
-  let (prng, n) <- option.and_then(rand(prng))
+  let (prng, n) = option.and_then(rand(prng))
   if bits <= 8 {
     Some((prng, builtin.cons_bytearray(n % math.pow2(bits), buffer)))
   } else {
@@ -845,14 +845,14 @@ fn do_rand_n(
 }
 
 fn rand_n_fixture() -> Fuzzer<(Int, Int)> {
-  let bits <-
+  let bits =
     and_then(
       either(
         constant(1),
         either(constant(5), either(constant(8), constant(25))),
       ),
     )
-  let n <- map(rand_n(bits, _))
+  let n = map(rand_n(bits, _))
   (bits, n)
 }
 
