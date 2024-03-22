@@ -752,7 +752,7 @@ pub fn map9(
 /// ```
 pub fn label(str: String) -> Void {
   str
-    |> builtin.append_string(@"\0", _)
+    |> builtin.append_string(@"0", _)
     |> builtin.debug(Void)
 }
 
